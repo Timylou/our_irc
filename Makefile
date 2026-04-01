@@ -1,15 +1,15 @@
-NAME	=	ircserver
+NAME	:=	ircserver
 
-CXX		=	c++
-CXXFLAGS	=	-Wall -Wextra -Werror -g
+CXX		:=	c++
+CXFLAGS	:=	-Wall -Wextra -Werror -g
 
-DIR_SRC	=	src
-DIR_OBJ	=	obj
-INCLUDE	=	-Iincludes
+DIR_SRC	:=	src
+DIR_OBJ	:=	obj
+INCLUDE	:=	-Iincludes
 
-SRC		=	main.cpp Server.cpp Client.cpp Channel.cpp
-OBJS	=	$(SRC:.cpp=.o)
-OBJ		=	$(addprefix $(DIR_OBJ)/, $(OBJS))
+SRC		:=	main.cpp Server.cpp Client.cpp Channel.cpp
+OBJ		:=	$(SRC:.cpp=.o)
+OBJ		:=	$(addprefix $(DIR_OBJ)/, $(OBJ))
 
 all		:	$(NAME)
 
