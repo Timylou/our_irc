@@ -6,11 +6,17 @@
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 11:06:30 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/01 11:06:42 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/01 16:08:52 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef IRC_HPP
 # define IRC_HPP
+
+# include "Server.hpp"
+# include "Client.hpp"
+# include "Channel.hpp"
+
+# define MAX_CLIENTS 100
 
 #endif

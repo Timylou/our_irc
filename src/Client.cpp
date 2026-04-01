@@ -1,19 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/04/01 15:13:10 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/01 16:09:25 by yel-mens         ###   ########.fr       */
+/*   Created: 2026/04/01 15:53:33 by yel-mens          #+#    #+#             */
+/*   Updated: 2026/04/01 16:00:22 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "irc.hpp"
+# include "Client.hpp"
 
-int	main(int argc, char **argv)
-{
-	(void)argc;
-	(void)argv;
-}
+/********************* CONSTRUCTOR ********************/
+
+Client::Client(int socket, std::string name)	:	_socket(socket), _name(name) {}
+
+/********************* DESTRUCTOR *********************/
+
+Client::~Client(void) {}

@@ -1,19 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/04/01 15:13:10 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/01 16:09:25 by yel-mens         ###   ########.fr       */
+/*   Created: 2026/04/01 16:06:22 by yel-mens          #+#    #+#             */
+/*   Updated: 2026/04/01 16:07:58 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "irc.hpp"
+#include "Channel.hpp"
 
-int	main(int argc, char **argv)
-{
-	(void)argc;
-	(void)argv;
-}
+/******************** CONSTRUCTOR ********************/
+
+Channel::Channel(const std::string &name)	:	_name(name) {}
+
+/********************* DESTRUCTOR ********************/
+
+Channel::~Channel(void) {}
+

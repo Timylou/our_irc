@@ -1,25 +1,25 @@
 NAME	=	ircserver
 
 CXX		=	c++
-CXFLAGS	=	-Wall -Wextra -Werror -g
+CXXFLAGS	=	-Wall -Wextra -Werror -g
 
 DIR_SRC	=	src
 DIR_OBJ	=	obj
 INCLUDE	=	-Iincludes
 
-SRC		=	main.cpp
-OBJ		=	$(SRC:.cpp=.o)
-OBJ		=	$(addprefix $(DIR_OBJ)/, $(OBJ))
+SRC		=	main.cpp Server.cpp Client.cpp Channel.cpp
+OBJS	=	$(SRC:.cpp=.o)
+OBJ		=	$(addprefix $(DIR_OBJ)/, $(OBJS))
 
 all		:	$(NAME)
 
 $(NAME)	:	$(OBJ)
-	$(CXX) $^ -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 	@echo "✅ Compilation completed: $(NAME)"
 
 $(DIR_OBJ)/%.o	:	$(DIR_SRC)/%.cpp
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CXFLAGS) $(INCLUDES) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
 clean	:
 	@rm -rf $(DIR_OBJ)
