@@ -6,7 +6,7 @@
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:13:10 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/01 16:09:25 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/02 15:15:36 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 int	main(int argc, char **argv)
 {
-	(void)argc;
-	(void)argv;
+	Server	server;
+
+	server.run();
 }
