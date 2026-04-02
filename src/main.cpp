@@ -6,7 +6,7 @@
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:13:10 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/02 15:15:36 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/02 17:28:48 by amairia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,11 @@
 
 int	main(int argc, char **argv)
 {
-	Server	server;
-
-	server.run();
+	try {
+		Server	server;
+		server.run();
+	}
+	catch (std::exception& e) {
+		std::cout << e.what() << std::endl;
+	}
 }

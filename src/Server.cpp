@@ -6,11 +6,19 @@
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/02 17:20:30 by amairia          ###   ########.fr       */
+/*   Updated: 2026/04/02 21:16:08 by amairia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
+
+/******************** SIGNAL HANDLER ********************/
+
+volatile sig_atomic_t g_running = 1;
+
+void handleSignal(int signal){
+	g_running = 0;
+}
 
 /******************** CONSTRUCTORS ********************/
 
@@ -49,6 +57,8 @@ Server::Server(void)	:	_port(6667), _password("miaou")
 	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_listenSocket < 0)
 		throw (std::runtime_error("Error : Cannot open listen socket"));
+	// handlers for SIGINT
+	std::signal(SIGINT, handleSignal);
 	serverInit(this);
 }
 
@@ -58,13 +68,22 @@ Server::Server(unsigned short port, std::string password)	:	_port(port), _passwo
 	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_listenSocket < 0)
 		throw (std::runtime_error("Error : Cannot open listen socket"));
+	// handlers for SIGINT
+	std::signal(SIGINT, handleSignal);
 	serverInit(this);
 }
 
 /********************* DESTRUCTOR ********************/
 
 Server::~Server(void) {
-//cherche les fonctions de la lib qui permettent de close ce qu'on utilise
+	std::string shutdownMsg = "\nServer shutting down\r\n"; // \r\n norm IRC
+	for (size_t i = 1; i < _clients.size(); ++i){
+		send(_clients[i].fd, shutdownMsg.c_str(), shutdownMsg.size(), 0); // sender to client
+		close(_clients[i].fd);
+	}
+	_clients.clear();
+	close(_listenSocket);
+	std::cout << std::endl << "Signal received, shutting down the server..." << std::endl;
 }
 
 /************************* RUN ***********************/
@@ -75,14 +94,42 @@ void	Server::run(void)
 	int		clientSocket;
 	int		bytes;
 
-	while (true)
+	while (g_running) // global for SIGINT SIGTERM
 	{
-		if (poll(this->_clients.data(), this->_clients.size(), -1) < 0)
+		// set for check ctrlD
+		pollfd stdinPoll;
+		stdinPoll.fd = STDIN_FILENO;
+		stdinPoll.events = POLLIN;
+		stdinPoll.revents = 0;
+		std::vector<pollfd> fds = this->_clients;
+		fds.push_back(stdinPoll);
+
+		//OLD VERSION
+	//	if (poll(this->_clients.data(), this->_clients.size(), -1) < 0)
+	//		throw std::runtime_error("poll error");
+		// NEW VERSION
+		size_t ret = poll(fds.data(), fds.size(), -1);
+		if (ret < 0)
+		{
+			if (errno == EINTR) // Interrupted by a signal (Ctrl+C)
+				continue;
 			throw std::runtime_error("poll error");
+		}
+
+		// check ctrlD
+		pollfd& stdinFd = fds.back();
+		if (stdinFd.revents & POLLIN){
+			char tmp[2];
+			if (!fgets(tmp, sizeof(tmp), stdin)) {
+				std::cout << std::endl << "EOF detected" << std::endl;
+				g_running = 0;
+				continue;
+			}
+		}
 
 		for (size_t i = 0; i < this->_clients.size(); ++i)
 		{
-			if (!(this->_clients[i].revents & POLLIN)) // If the client has nothing to say skip it
+			if (!(fds[i].revents & POLLIN)) // If the client has nothing to say skip it
 				continue;
 
 			// 🔸 New client
@@ -117,7 +164,7 @@ int				Server::getSocket(void) const {return (this->_listenSocket);}
 unsigned short	Server::getPort(void) const {return (this->_port);}
 std::string		Server::getPassword(void) const {return (this->_password);}
 
-/*********************** CLIETNS *********************/
+/*********************** CLIENTS *********************/
 
 void	Server::addClient(int socket)
 {
