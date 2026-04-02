@@ -6,7 +6,7 @@
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/02 15:23:08 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/02 17:20:30 by amairia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,9 @@ Server::Server(unsigned short port, std::string password)	:	_port(port), _passwo
 
 /********************* DESTRUCTOR ********************/
 
-Server::~Server(void) {}
+Server::~Server(void) {
+//cherche les fonctions de la lib qui permettent de close ce qu'on utilise
+}
 
 /************************* RUN ***********************/
 
