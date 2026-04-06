@@ -3,18 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
+/*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:53:33 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/01 16:00:22 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/06 17:26:52 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Client.hpp"
-
-/********************* CONSTRUCTOR ********************/
-
-Client::Client(int socket, std::string name)	:	_socket(socket), _name(name) {}
 
 /********************* DESTRUCTOR *********************/
 

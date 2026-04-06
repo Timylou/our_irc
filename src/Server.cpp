@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
+/*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/02 15:23:08 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/06 18:24:04 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,12 @@ void	serverInit(Server *serv)
 	int			opt;		// config for the address and the port
 	sockaddr_in	serverAddr;	// struct of the address server
 	pollfd		pfd;		// struct for poll to listen the listenSocket
-	
+
 	// Config listen socket
 	opt = 1;
 	if (setsockopt(serv->getSocket(), SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
 		throw std::runtime_error("Error : Cannot config socket");
-	
+
 	// Config server address
 	std::memset(&serverAddr, 0, sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;			// IPV4
@@ -69,45 +69,71 @@ Server::~Server(void) {}
 
 void	Server::run(void)
 {
-	char	buffer[BUFFER_SIZE];
+	// char	buffer[BUFFER_SIZE];
 	int		clientSocket;
-	int		bytes;
+	// int		bytes;
 
 	while (true)
 	{
-		if (poll(this->_clients.data(), this->_clients.size(), -1) < 0)
+		if (poll(this->_pfd.data(), this->_pfd.size(), -1) < 0)
 			throw std::runtime_error("poll error");
 
-		for (size_t i = 0; i < this->_clients.size(); ++i)
+		for (size_t i = 0; i < this->_pfd.size(); ++i)
 		{
-			if (!(this->_clients[i].revents & POLLIN)) // If the client has nothing to say skip it
+			if (!(this->_pfd[i].revents & POLLIN)) // If the client has nothing to say skip it
 				continue;
 
 			// 🔸 New client
-			if (this->_clients[i].fd == this->getSocket())
+			if (this->_pfd[i].fd == this->getSocket())
 			{
 				clientSocket = accept(this->getSocket(), NULL, NULL);
 				if (clientSocket >= 0)
 					this->addClient(clientSocket);
 			}
-			else // read client message
+			if (readMessage(_clients.find(_pfd[i].fd)->second))// read client message
 			{
-				bytes = recv(this->_clients[i].fd, buffer, BUFFER_SIZE - 1, 0);
-				if (bytes <= 0)
-				{
-					this->removeClient(i);
-					--i;
-				}
-				else
-				{
-					buffer[bytes] = '\0';
-					std::cout << "Client " << this->_clients[i].fd << " : " << buffer;
-					send(this->_clients[i].fd, buffer, bytes, 0); // TODO : Broadcast
-				}
+				std::cout << "Client " << _pfd[i].fd << " : " << _clients.find(_pfd[i].fd)->second->getBuffer();
+				send(_pfd[i].fd, _clients.find(_pfd[i].fd)->second->getBuffer().c_str(), _clients.find(_pfd[i].fd)->second->getBuffer().length(), MSG_DONTWAIT);
+				// doCmd(_clients.find(_pfd[i].fd)->second);
+
+				// bytes = recv(this->_clients[i].fd, buffer, BUFFER_SIZE - 1, 0);
+				// if (bytes <= 0)
+				// {
+				// 	// if (bytes == -1) // TODO : gerer -1 ?
+				// 	this->removeClient(i);
+				// 	--i;
+				// }
+				// else
+				// {
+					// buffer[bytes] = '\0';
+					// manage buffer
+					// std::cout << "Client " << this->_clients[i].fd << " : " << buffer;
+					// send(this->_clients[i].fd, buffer, bytes, 0); // TODO : Broadcast
+				// }
 			}
 		}
 	}
 }
+
+bool	readMessage(Client *client) {
+
+	int		bytes;
+	char	buffer[BUFFER_SIZE];
+
+	do {
+		bytes = recv(client->getSocket(), buffer, BUFFER_SIZE, MSG_DONTWAIT);
+		if (bytes <= 0) {
+			client->setBuffer("QUIT : leaving chat\r\n");
+			return (true);
+		}
+		client->getBuffer().append(buffer);
+	} while (bytes == BUFFER_SIZE && buffer[bytes - 1] != '\n' && buffer[bytes - 2] != '\r');
+	return (client->getBuffer().find("\r\n") != std::string::npos);
+}
+
+// void	doCmd(Client *client) {
+
+// }
 
 /*********************** GETTERS *********************/
 
@@ -120,16 +146,19 @@ std::string		Server::getPassword(void) const {return (this->_password);}
 void	Server::addClient(int socket)
 {
 	pollfd	pfd;
+	Client	*client = new Client(socket);
 
 	pfd.fd = socket;
 	pfd.events = POLLIN;			// prevent poll to read this pollfd
 	pfd.revents = 0;				// revents will be 1 when _clients try to connect
-	this->_clients.push_back(pfd);	// add the client in the client's array
+	this->_pfd.push_back(pfd);		// add the client's pollfd
+	_clients.insert(_clients.begin(), std::make_pair(socket, client)); // add a new client
 }
 
 void	Server::removeClient(int numClient)
 {
-	std::cout << "Client "<< this->_clients[numClient].fd << " disconnected" << std::endl;
-	close(this->_clients[numClient].fd);
-	this->_clients.erase(this->_clients.begin() + numClient);
+	std::cout << "Client "<< this->_pfd[numClient].fd << " disconnected" << std::endl;
+	close(this->_pfd[numClient].fd);
+	_clients.erase(_pfd[numClient].fd);
+	this->_pfd.erase(this->_pfd.begin() + numClient);
 }
