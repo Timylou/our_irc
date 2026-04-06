@@ -6,7 +6,7 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/06 18:24:04 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/06 18:49:08 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,9 +69,7 @@ Server::~Server(void) {}
 
 void	Server::run(void)
 {
-	// char	buffer[BUFFER_SIZE];
 	int		clientSocket;
-	// int		bytes;
 
 	while (true)
 	{
@@ -90,30 +88,17 @@ void	Server::run(void)
 				if (clientSocket >= 0)
 					this->addClient(clientSocket);
 			}
-			if (readMessage(_clients.find(_pfd[i].fd)->second))// read client message
+			else if (readMessage(_clients.find(_pfd[i].fd)->second))// read client message
 			{
-				std::cout << "Client " << _pfd[i].fd << " : " << _clients.find(_pfd[i].fd)->second->getBuffer();
+				std::cerr << "Client " << _pfd[i].fd << " : " << _clients.find(_pfd[i].fd)->second->getBuffer();
 				send(_pfd[i].fd, _clients.find(_pfd[i].fd)->second->getBuffer().c_str(), _clients.find(_pfd[i].fd)->second->getBuffer().length(), MSG_DONTWAIT);
 				// doCmd(_clients.find(_pfd[i].fd)->second);
-
-				// bytes = recv(this->_clients[i].fd, buffer, BUFFER_SIZE - 1, 0);
-				// if (bytes <= 0)
-				// {
-				// 	// if (bytes == -1) // TODO : gerer -1 ?
-				// 	this->removeClient(i);
-				// 	--i;
-				// }
-				// else
-				// {
-					// buffer[bytes] = '\0';
-					// manage buffer
-					// std::cout << "Client " << this->_clients[i].fd << " : " << buffer;
-					// send(this->_clients[i].fd, buffer, bytes, 0); // TODO : Broadcast
-				// }
 			}
 		}
 	}
 }
+
+/*********************** GETTERS *********************/
 
 bool	readMessage(Client *client) {
 
@@ -160,5 +145,6 @@ void	Server::removeClient(int numClient)
 	std::cout << "Client "<< this->_pfd[numClient].fd << " disconnected" << std::endl;
 	close(this->_pfd[numClient].fd);
 	_clients.erase(_pfd[numClient].fd);
+	delete _clients.find(this->_pfd[numClient].fd)->second; // if this breaks, if-check find()
 	this->_pfd.erase(this->_pfd.begin() + numClient);
 }
