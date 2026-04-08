@@ -6,7 +6,7 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/06 18:49:08 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/08 19:39:12 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,13 +63,17 @@ Server::Server(unsigned short port, std::string password)	:	_port(port), _passwo
 
 /********************* DESTRUCTOR ********************/
 
-Server::~Server(void) {}
+Server::~Server(void)
+{
+
+}
 
 /************************* RUN ***********************/
 
 void	Server::run(void)
 {
 	int		clientSocket;
+	Client	*client;
 
 	while (true)
 	{
@@ -81,6 +85,7 @@ void	Server::run(void)
 			if (!(this->_pfd[i].revents & POLLIN)) // If the client has nothing to say skip it
 				continue;
 
+			client = _clients.find(this->_pfd[i].fd)->second;
 			// 🔸 New client
 			if (this->_pfd[i].fd == this->getSocket())
 			{
@@ -88,35 +93,44 @@ void	Server::run(void)
 				if (clientSocket >= 0)
 					this->addClient(clientSocket);
 			}
-			else if (readMessage(_clients.find(_pfd[i].fd)->second))// read client message
+			else if (readMessage(client))// read client message
 			{
-				std::cerr << "Client " << _pfd[i].fd << " : " << _clients.find(_pfd[i].fd)->second->getBuffer();
-				send(_pfd[i].fd, _clients.find(_pfd[i].fd)->second->getBuffer().c_str(), _clients.find(_pfd[i].fd)->second->getBuffer().length(), MSG_DONTWAIT);
-				// doCmd(_clients.find(_pfd[i].fd)->second);
+				std::cerr << client->getUsername() << i << " : " << client->getBuffer();
+				// doCmd(client);
+				broadcast(client);
+			}
+			else
+			{
+				removeClient(client, i);
+				i--;
 			}
 		}
 	}
 }
 
-/*********************** GETTERS *********************/
+/*********************** READ ************************/
 
-bool	readMessage(Client *client) {
+bool	Server::readMessage(Client *client) {
 
 	int		bytes;
-	char	buffer[BUFFER_SIZE];
+	char	buffer[BUFFER_SIZE + 1];
 
+	client->setBuffer("\0");
 	do {
 		bytes = recv(client->getSocket(), buffer, BUFFER_SIZE, MSG_DONTWAIT);
 		if (bytes <= 0) {
-			client->setBuffer("QUIT : leaving chat\r\n");
-			return (true);
+			client->setBuffer("QUIT : leaving chat\r\n"); // TODO: add client username in quit message uwu
+			broadcast(client);
+			return (false);
 		}
+		buffer[bytes] = 0;
 		client->getBuffer().append(buffer);
 	} while (bytes == BUFFER_SIZE && buffer[bytes - 1] != '\n' && buffer[bytes - 2] != '\r');
 	return (client->getBuffer().find("\r\n") != std::string::npos);
 }
 
 // void	doCmd(Client *client) {
+// 	// parsing commande "CMD blabla"
 
 // }
 
@@ -126,7 +140,7 @@ int				Server::getSocket(void) const {return (this->_listenSocket);}
 unsigned short	Server::getPort(void) const {return (this->_port);}
 std::string		Server::getPassword(void) const {return (this->_password);}
 
-/*********************** CLIETNS *********************/
+/*********************** CLIENTS *********************/
 
 void	Server::addClient(int socket)
 {
@@ -140,11 +154,21 @@ void	Server::addClient(int socket)
 	_clients.insert(_clients.begin(), std::make_pair(socket, client)); // add a new client
 }
 
-void	Server::removeClient(int numClient)
+void	Server::removeClient(Client *client, int numClient)
 {
-	std::cout << "Client "<< this->_pfd[numClient].fd << " disconnected" << std::endl;
-	close(this->_pfd[numClient].fd);
-	_clients.erase(_pfd[numClient].fd);
-	delete _clients.find(this->_pfd[numClient].fd)->second; // if this breaks, if-check find()
-	this->_pfd.erase(this->_pfd.begin() + numClient);
+	close(client->getSocket()); // close pollfd
+	_pfd.erase(this->_pfd.begin() + numClient); //  supprimer le pollfd du vecteur
+	_clients.erase(client->getSocket()); // delete le client de la map
+	delete client;
+}
+
+/********************* BROADCAST *********************/
+
+void	Server::broadcast(Client *client)
+{
+	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->first != client->getSocket() && it->first != this->getSocket())
+			send(it->second->getSocket(), client->getBuffer().c_str(), client->getBuffer().length(), MSG_DONTWAIT);
+	}
 }

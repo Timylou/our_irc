@@ -6,7 +6,7 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:39:16 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/06 18:24:12 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/08 19:25:44 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,10 +54,10 @@ class Server
 		std::string		getPassword(void) const;
 
 		void	addClient(int socket);
-		void	removeClient(int numClient);
+		void	removeClient(Client *client, int numClient);
+
+		bool	readMessage(Client *client);
+		void	broadcast(Client *client);
 };
-
-bool	readMessage(Client *client);
-
 
 #endif
