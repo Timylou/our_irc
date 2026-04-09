@@ -6,7 +6,7 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:47:35 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/07 15:05:50 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/09 15:21:41 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ class Client
 		std::string	_realname = "";	// hexchat specific
 		bool		_status = false;	// online status : true for online, false for offline
 		std::string	_buffer = "";	// message entry buffer
+		// 
 
 		Client(void);			// We can't use the void constructor
 

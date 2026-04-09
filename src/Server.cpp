@@ -6,7 +6,7 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/08 19:39:12 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/09 15:56:11 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -163,6 +163,8 @@ void	Server::removeClient(Client *client, int numClient)
 }
 
 /********************* BROADCAST *********************/
+
+// TODO : change braodcast to this -> std::vector<Client *>, std::string message
 
 void	Server::broadcast(Client *client)
 {
