@@ -6,13 +6,17 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:39:16 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/08 19:25:44 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/10 16:53:17 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#pragma once
+
+# define MAX_CLIENTS 100
+# define BUFFER_SIZE 1024
+
 # include <iostream>		// std::cout, std::cerr
+# include <algorithm>		// std::find
 # include <map>				// std::map
 # include <string>			// std::string
 # include <vector>			// std::vector
@@ -27,11 +31,11 @@
 # include <arpa/inet.h>		// inet_ntoa(), inet_pton(), inet_ntop()
 # include <ifaddrs.h>		// getifaddrs()
 # include <poll.h>			// poll(), pollfd
-
 # include "Client.hpp"
+# include "Channel.hpp"
 
-# define MAX_CLIENTS 100
-# define BUFFER_SIZE 1024
+class Client;
+class Channel;
 
 class Server
 {
@@ -41,6 +45,7 @@ class Server
 		const std::string		_password;		// server's password
 		std::map<int, Client *>	_clients;		// map of all clients with user info
 		std::vector<pollfd>		_pfd;			// array of all clients pollfd struct
+		std::vector<Channel *> _channels;		// array of channels
 
 	public:
 		Server(void);
@@ -57,7 +62,8 @@ class Server
 		void	removeClient(Client *client, int numClient);
 
 		bool	readMessage(Client *client);
-		void	broadcast(Client *client);
+		void	broadcast(Client *client, std::string message);
+		std::vector<Client *>	getListenningClients(Client *client);
+
 };
 
-#endif

@@ -6,16 +6,13 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 16:00:40 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/09 15:35:25 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/10 17:46:53 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CHANNEL_HPP
-# define CHANNEL_HPP
-# include <iostream>
-# include <vector>
-# include <map>
-# include "Client.hpp"
+#pragma once
+
+# include "irc.hpp"
 
 typedef enum e_mode
 {
@@ -26,7 +23,7 @@ typedef enum e_mode
 	MODE_L
 }	t_mode;
 
-
+class Client;
 
 class Channel
 {
@@ -39,6 +36,9 @@ class Channel
 	public:
 		Channel(const std::string &name);
 		~Channel(void);
-};
 
-#endif
+		bool						findClient(Client *client) { return (_clients.find(client) != _clients.end()); }
+		std::map<Client *, bool>	getClients(void) { return this->_clients; }
+		void						addClient(Client *client) {_clients[client] = false;}
+		void						removeClient(Client *client) {_clients.erase(client);}
+};
