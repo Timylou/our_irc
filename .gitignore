@@ -1,0 +1,12 @@
+# Build directories and files
+obj/
+*.o
+
+# Executables
+*.out
+ircserver
+
+# Temp files
+*~
+*.swp
+*.supp

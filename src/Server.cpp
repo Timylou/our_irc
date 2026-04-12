@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
+/*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/02 21:16:08 by amairia          ###   ########.fr       */
+/*   Updated: 2026/04/12 21:14:42 by amairia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,12 +27,12 @@ void	serverInit(Server *serv)
 	int			opt;		// config for the address and the port
 	sockaddr_in	serverAddr;	// struct of the address server
 	pollfd		pfd;		// struct for poll to listen the listenSocket
-	
+
 	// Config listen socket
 	opt = 1;
 	if (setsockopt(serv->getSocket(), SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
 		throw std::runtime_error("Error : Cannot config socket");
-	
+
 	// Config server address
 	std::memset(&serverAddr, 0, sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;			// IPV4
@@ -90,12 +90,12 @@ Server::~Server(void) {
 
 void	Server::run(void)
 {
-	char	buffer[BUFFER_SIZE];
 	int		clientSocket;
-	int		bytes;
+	Client	*client;
 
 	while (g_running) // global for SIGINT SIGTERM
 	{
+/*<<<<<<< HEAD
 		// set for check ctrlD
 		pollfd stdinPoll;
 		stdinPoll.fd = STDIN_FILENO;
@@ -113,6 +113,9 @@ void	Server::run(void)
 		{
 			if (errno == EINTR) // Interrupted by a signal (Ctrl+C)
 				continue;
+=======
+		if (poll(this->_pfd.data(), this->_pfd.size(), -1) < 0)
+>>>>>>> main*/
 			throw std::runtime_error("poll error");
 		}
 
@@ -127,36 +130,63 @@ void	Server::run(void)
 			}
 		}
 
-		for (size_t i = 0; i < this->_clients.size(); ++i)
+		for (size_t i = 0; i < this->_pfd.size(); ++i)
 		{
+/*<<<<<<< HEAD
 			if (!(fds[i].revents & POLLIN)) // If the client has nothing to say skip it
+=======
+			if (!(this->_pfd[i].revents & POLLIN)) // If the client has nothing to say skip it
+>>>>>>> main*/
 				continue;
 
+			client = _clients.find(this->_pfd[i].fd)->second;
 			// 🔸 New client
-			if (this->_clients[i].fd == this->getSocket())
+			if (this->_pfd[i].fd == this->getSocket())
 			{
 				clientSocket = accept(this->getSocket(), NULL, NULL);
 				if (clientSocket >= 0)
 					this->addClient(clientSocket);
 			}
-			else // read client message
+			else if (readMessage(client))// read client message
 			{
-				bytes = recv(this->_clients[i].fd, buffer, BUFFER_SIZE - 1, 0);
-				if (bytes <= 0)
-				{
-					this->removeClient(i);
-					--i;
-				}
-				else
-				{
-					buffer[bytes] = '\0';
-					std::cout << "Client " << this->_clients[i].fd << " : " << buffer;
-					send(this->_clients[i].fd, buffer, bytes, 0); // TODO : Broadcast
-				}
+				std::cerr << client->getUsername() << i << " : " << client->getBuffer();
+				// doCmd(client);
+				broadcast(client);
+			}
+			else
+			{
+				removeClient(client, i);
+				i--;
 			}
 		}
 	}
 }
+
+/*********************** READ ************************/
+
+bool	Server::readMessage(Client *client) {
+
+	int		bytes;
+	char	buffer[BUFFER_SIZE + 1];
+
+	client->setBuffer("\0");
+	do {
+		bytes = recv(client->getSocket(), buffer, BUFFER_SIZE, MSG_DONTWAIT);
+		if (bytes <= 0) {
+			client->setBuffer("QUIT : leaving chat\r\n"); // TODO: add client username in quit message uwu
+			broadcast(client);
+			return (false);
+		}
+		buffer[bytes] = 0;
+		client->getBuffer().append(buffer);
+	} while (bytes == BUFFER_SIZE && buffer[bytes - 1] != '\n' && buffer[bytes - 2] != '\r');
+	return (client->getBuffer().find("\r\n") != std::string::npos);
+}
+
+// void	doCmd(Client *client) {
+// 	// parsing commande "CMD blabla"
+
+// }
 
 /*********************** GETTERS *********************/
 
@@ -169,16 +199,30 @@ std::string		Server::getPassword(void) const {return (this->_password);}
 void	Server::addClient(int socket)
 {
 	pollfd	pfd;
+	Client	*client = new Client(socket);
 
 	pfd.fd = socket;
 	pfd.events = POLLIN;			// prevent poll to read this pollfd
 	pfd.revents = 0;				// revents will be 1 when _clients try to connect
-	this->_clients.push_back(pfd);	// add the client in the client's array
+	this->_pfd.push_back(pfd);		// add the client's pollfd
+	_clients.insert(_clients.begin(), std::make_pair(socket, client)); // add a new client
 }
 
-void	Server::removeClient(int numClient)
+void	Server::removeClient(Client *client, int numClient)
 {
-	std::cout << "Client "<< this->_clients[numClient].fd << " disconnected" << std::endl;
-	close(this->_clients[numClient].fd);
-	this->_clients.erase(this->_clients.begin() + numClient);
+	close(client->getSocket()); // close pollfd
+	_pfd.erase(this->_pfd.begin() + numClient); //  supprimer le pollfd du vecteur
+	_clients.erase(client->getSocket()); // delete le client de la map
+	delete client;
+}
+
+/********************* BROADCAST *********************/
+
+void	Server::broadcast(Client *client)
+{
+	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->first != client->getSocket() && it->first != this->getSocket())
+			send(it->second->getSocket(), client->getBuffer().c_str(), client->getBuffer().length(), MSG_DONTWAIT);
+	}
 }
