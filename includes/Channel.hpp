@@ -3,30 +3,42 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
+/*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 16:00:40 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/01 16:06:04 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/10 17:46:53 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CHANNEL_HPP
-# define CHANNEL_HPP
-# include <iostream>
-# include <vector>
-# include <map>
-# include "Client.hpp"
+#pragma once
+
+# include "irc.hpp"
+
+typedef enum e_mode
+{
+	MODE_I,
+	MODE_T,
+	MODE_K,
+	MODE_O,
+	MODE_L
+}	t_mode;
+
+class Client;
 
 class Channel
 {
 	private:
-		std::string				_name;		// the name of the channel
-		std::vector<Client *>	_clients;	// array of the channel's client
-		std::string				_topic;		// the topic of the current channel
+		std::string					_name;		// the name of the channel
+		std::string					_topic;		// the topic of the current channel
+		std::map<t_mode, bool>		_modes;		// map of channel modes
+		std::map<Client *, bool>	_clients;	// map of clients
 
 	public:
 		Channel(const std::string &name);
 		~Channel(void);
-};
 
-#endif
+		bool						findClient(Client *client) { return (_clients.find(client) != _clients.end()); }
+		std::map<Client *, bool>	getClients(void) { return this->_clients; }
+		void						addClient(Client *client) {_clients[client] = false;}
+		void						removeClient(Client *client) {_clients.erase(client);}
+};

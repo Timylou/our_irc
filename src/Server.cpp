@@ -151,7 +151,7 @@ void	Server::run(void)
 			{
 				std::cerr << client->getUsername() << i << " : " << client->getBuffer();
 				// doCmd(client);
-				broadcast(client);
+				broadcast(client, client->getBuffer());
 			}
 			else
 			{
@@ -173,8 +173,7 @@ bool	Server::readMessage(Client *client) {
 	do {
 		bytes = recv(client->getSocket(), buffer, BUFFER_SIZE, MSG_DONTWAIT);
 		if (bytes <= 0) {
-			client->setBuffer("QUIT : leaving chat\r\n"); // TODO: add client username in quit message uwu
-			broadcast(client);
+			broadcast(client, "QUIT : leaving chat\r\n");
 			return (false);
 		}
 		buffer[bytes] = 0;
@@ -206,6 +205,13 @@ void	Server::addClient(int socket)
 	pfd.revents = 0;				// revents will be 1 when _clients try to connect
 	this->_pfd.push_back(pfd);		// add the client's pollfd
 	_clients.insert(_clients.begin(), std::make_pair(socket, client)); // add a new client
+
+	// A ENLEVER !!!!!!!!
+	if (socket != getSocket())
+	{
+		this->_channels.push_back(new Channel("miaou")); // A ENLEVER !!!!!!!!
+		_channels[0]->addClient(client); // A ENLEVER !!!!!!!!
+	}// A ENLEVER !!!!!!!!
 }
 
 void	Server::removeClient(Client *client, int numClient)
@@ -213,16 +219,36 @@ void	Server::removeClient(Client *client, int numClient)
 	close(client->getSocket()); // close pollfd
 	_pfd.erase(this->_pfd.begin() + numClient); //  supprimer le pollfd du vecteur
 	_clients.erase(client->getSocket()); // delete le client de la map
+	for (std::vector<Channel *>::iterator itChannel = _channels.begin(); itChannel != _channels.end(); ++itChannel)
+		(*itChannel)->removeClient(client);
 	delete client;
 }
 
 /********************* BROADCAST *********************/
 
-void	Server::broadcast(Client *client)
+void	Server::broadcast(Client *client, std::string message)
 {
-	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	std::vector<Client *>	clientList = getListenningClients(client);
+	for (std::vector<Client *>::iterator it = clientList.begin(); it != clientList.end(); ++it)
+		send((*it)->getSocket(), message.c_str(), message.length(), MSG_DONTWAIT);
+}
+
+std::vector<Client *>	Server::getListenningClients(Client *client)
+{
+	std::vector<Client *>		clientList;
+	std::map<Client *, bool>	channelClients;
+
+	for (std::vector<Channel *>::iterator itChannel = _channels.begin(); itChannel != _channels.end(); ++itChannel)
 	{
-		if (it->first != client->getSocket() && it->first != this->getSocket())
-			send(it->second->getSocket(), client->getBuffer().c_str(), client->getBuffer().length(), MSG_DONTWAIT);
+		if (!(*itChannel)->findClient(client))
+			continue;
+		channelClients = (*itChannel)->getClients();
+		for (std::map<Client *, bool>::iterator itClient = channelClients.begin(); itClient != channelClients.end(); ++itClient)
+		{
+			std::vector<Client *>::iterator	itVector = std::find(clientList.begin(), clientList.end(), itClient->first);
+			if (itVector == clientList.end() && itClient->first != client)
+				clientList.push_back(itClient->first);
+		}
 	}
+	return (clientList);
 }
