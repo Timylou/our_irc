@@ -6,7 +6,7 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/10 17:41:37 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/13 14:25:24 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ bool	Server::readMessage(Client *client) {
 	int		bytes;
 	char	buffer[BUFFER_SIZE + 1];
 
-	client->setBuffer("\0");
+	client->setBuffer("\0"); // TODO: parse buffer
 	do {
 		bytes = recv(client->getSocket(), buffer, BUFFER_SIZE, MSG_DONTWAIT);
 		if (bytes <= 0) {

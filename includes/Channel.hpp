@@ -6,7 +6,7 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 16:00:40 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/10 17:46:53 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/13 14:37:55 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,9 @@ class Channel
 	private:
 		std::string					_name;		// the name of the channel
 		std::string					_topic;		// the topic of the current channel
+		std::string					_password;	// the channel's password
 		std::map<t_mode, bool>		_modes;		// map of channel modes
-		std::map<Client *, bool>	_clients;	// map of clients
+		std::map<Client *, bool>	_clients;	// map of clients. bool = operator status
 
 	public:
 		Channel(const std::string &name);

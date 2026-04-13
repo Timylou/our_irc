@@ -6,7 +6,7 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:39:16 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/10 16:53:17 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/13 14:23:48 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ class Server
 		int						_listenSocket;	// socket to listen clients
 		unsigned short			_port;			// port's server
 		const std::string		_password;		// server's password
-		std::map<int, Client *>	_clients;		// map of all clients with user info
+		std::map<int, Client *>	_clients;		// map of all clients with user info. int = socket
 		std::vector<pollfd>		_pfd;			// array of all clients pollfd struct
 		std::vector<Channel *> _channels;		// array of channels
 

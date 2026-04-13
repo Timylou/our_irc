@@ -6,7 +6,7 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:47:35 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/10 17:07:29 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/13 13:36:53 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,10 @@ class Client
 		std::string	getUsername()					{ return (this->_username); }
 		std::string	getNickname()					{ return (this->_nickname); }
 		std::string	getRealname()					{ return (this->_realname); }
+
+		void		setUsername(std::string newUsername)	{ this->_username = newUsername; }
+		void		setNickname(std::string newNickname)	{ this->_nickname = newNickname; }
+		// void		setRealname(std::string newRealname)	{ this->_realname = newRealname; } maybe ?
 
 		~Client(void);
 };
