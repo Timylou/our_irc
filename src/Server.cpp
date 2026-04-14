@@ -6,7 +6,7 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/12 21:14:42 by amairia          ###   ########.fr       */
+/*   Updated: 2026/04/14 16:12:10 by amairia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,12 +77,13 @@ Server::Server(unsigned short port, std::string password)	:	_port(port), _passwo
 
 Server::~Server(void) {
 	std::string shutdownMsg = "\nServer shutting down\r\n"; // \r\n norm IRC
-	for (size_t i = 1; i < _clients.size(); ++i){
-		send(_clients[i].fd, shutdownMsg.c_str(), shutdownMsg.size(), 0); // sender to client
-		close(_clients[i].fd);
+	for (size_t i = 1; i < _pfd.size(); ++i){
+		send(_pfd[i].fd, shutdownMsg.c_str(), shutdownMsg.size(), 0); // sender to client
+		//close(_clients[i].fd);
+		removeClient(_clients.find(_pfd[i].fd)->second, i);
+		i--;
 	}
-	_clients.clear();
-	close(_listenSocket);
+	removeClient(_clients.find(_pfd[0].fd)->second, 0);
 	std::cout << std::endl << "Signal received, shutting down the server..." << std::endl;
 }
 
@@ -95,48 +96,18 @@ void	Server::run(void)
 
 	while (g_running) // global for SIGINT SIGTERM
 	{
-/*<<<<<<< HEAD
-		// set for check ctrlD
-		pollfd stdinPoll;
-		stdinPoll.fd = STDIN_FILENO;
-		stdinPoll.events = POLLIN;
-		stdinPoll.revents = 0;
-		std::vector<pollfd> fds = this->_clients;
-		fds.push_back(stdinPoll);
-
-		//OLD VERSION
-	//	if (poll(this->_clients.data(), this->_clients.size(), -1) < 0)
-	//		throw std::runtime_error("poll error");
-		// NEW VERSION
-		size_t ret = poll(fds.data(), fds.size(), -1);
+		size_t ret = poll(_pfd.data(), _pfd.size(), -1);
 		if (ret < 0)
 		{
 			if (errno == EINTR) // Interrupted by a signal (Ctrl+C)
 				continue;
-=======
 		if (poll(this->_pfd.data(), this->_pfd.size(), -1) < 0)
->>>>>>> main*/
 			throw std::runtime_error("poll error");
-		}
-
-		// check ctrlD
-		pollfd& stdinFd = fds.back();
-		if (stdinFd.revents & POLLIN){
-			char tmp[2];
-			if (!fgets(tmp, sizeof(tmp), stdin)) {
-				std::cout << std::endl << "EOF detected" << std::endl;
-				g_running = 0;
-				continue;
-			}
 		}
 
 		for (size_t i = 0; i < this->_pfd.size(); ++i)
 		{
-/*<<<<<<< HEAD
-			if (!(fds[i].revents & POLLIN)) // If the client has nothing to say skip it
-=======
 			if (!(this->_pfd[i].revents & POLLIN)) // If the client has nothing to say skip it
->>>>>>> main*/
 				continue;
 
 			client = _clients.find(this->_pfd[i].fd)->second;
@@ -172,6 +143,7 @@ bool	Server::readMessage(Client *client) {
 	client->setBuffer("\0");
 	do {
 		bytes = recv(client->getSocket(), buffer, BUFFER_SIZE, MSG_DONTWAIT);
+		std::cout << bytes << std::endl;
 		if (bytes <= 0) {
 			broadcast(client, "QUIT : leaving chat\r\n");
 			return (false);
@@ -206,12 +178,12 @@ void	Server::addClient(int socket)
 	this->_pfd.push_back(pfd);		// add the client's pollfd
 	_clients.insert(_clients.begin(), std::make_pair(socket, client)); // add a new client
 
-	// A ENLEVER !!!!!!!!
+	/* A ENLEVER !!!!!!!!
 	if (socket != getSocket())
 	{
 		this->_channels.push_back(new Channel("miaou")); // A ENLEVER !!!!!!!!
 		_channels[0]->addClient(client); // A ENLEVER !!!!!!!!
-	}// A ENLEVER !!!!!!!!
+	} A ENLEVER !!!!!!!!*/
 }
 
 void	Server::removeClient(Client *client, int numClient)
