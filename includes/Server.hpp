@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:39:16 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/13 14:23:48 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/15 18:08:51 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,24 +15,7 @@
 # define MAX_CLIENTS 100
 # define BUFFER_SIZE 1024
 
-# include <iostream>		// std::cout, std::cerr
-# include <algorithm>		// std::find
-# include <map>				// std::map
-# include <string>			// std::string
-# include <vector>			// std::vector
-# include <stdexcept>		// std::runtime_error
-# include <cstring>			// std::memset
-# include <cerrno>			// errno
-# include <csignal>			// sigaction, SIGINT, SIGTSTP
-# include <unistd.h>		// close()
-# include <sys/types.h>		// types génériques pour socket
-# include <sys/socket.h>	// socket(), bind(), listen(), accept(), setsockopt()
-# include <netinet/in.h> 	// sockaddr_in, in_addr, htons(), INADDR_ANY, AF_INET
-# include <arpa/inet.h>		// inet_ntoa(), inet_pton(), inet_ntop()
-# include <ifaddrs.h>		// getifaddrs()
-# include <poll.h>			// poll(), pollfd
-# include "Client.hpp"
-# include "Channel.hpp"
+# include "irc.hpp"
 
 class Client;
 class Channel;
@@ -40,12 +23,12 @@ class Channel;
 class Server
 {
 	private:
-		int						_listenSocket;	// socket to listen clients
-		unsigned short			_port;			// port's server
-		const std::string		_password;		// server's password
-		std::map<int, Client *>	_clients;		// map of all clients with user info. int = socket
-		std::vector<pollfd>		_pfd;			// array of all clients pollfd struct
-		std::vector<Channel *> _channels;		// array of channels
+		int									_listenSocket;	// socket to listen clients
+		unsigned short						_port;			// port's server
+		const std::string					_password;		// server's password
+		std::map<int, Client *>				_clients;		// map of all clients with user info. int = socket
+		std::vector<pollfd>					_pfd;			// array of all clients pollfd struct
+		std::map<std::string, Channel *>	_channels;		// array of channels
 
 	public:
 		Server(void);
@@ -61,9 +44,14 @@ class Server
 		void	addClient(int socket);
 		void	removeClient(Client *client, int numClient);
 
-		bool	readMessage(Client *client);
+		int		readMessage(Client *client);
 		void	broadcast(Client *client, std::string message);
 		std::vector<Client *>	getListenningClients(Client *client);
 
-};
+		bool	findChannel(const std::string &channelName);
+		void	addChannel(const std::string &channelName);
 
+		void	doCmd(Client *client);
+		void	join(Client *client, IRCMessage *message);
+		void	privmsg(Client *client, IRCMessage *message);
+};

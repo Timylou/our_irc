@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 16:00:40 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/13 14:37:55 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/15 18:54:05 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,4 +42,8 @@ class Channel
 		std::map<Client *, bool>	getClients(void) { return this->_clients; }
 		void						addClient(Client *client) {_clients[client] = false;}
 		void						removeClient(Client *client) {_clients.erase(client);}
+
+		std::string					getPassword(void) {return (_password);}
+		bool						getMode(t_mode mode) { return (_modes[mode]); }
+		void						Broadcast(Client *client, const std::string &message);
 };

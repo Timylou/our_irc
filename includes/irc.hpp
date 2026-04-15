@@ -3,19 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   irc.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 11:06:30 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/10 16:22:52 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/15 19:17:44 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-# include "Server.hpp"
-# include "Client.hpp"
-# include "Channel.hpp"
-
+# include <sstream>			// std::istringstream
+# include <string>			// std::string
 # include <iostream>		// std::cout, std::cerr
 # include <algorithm>		// std::find
 # include <map>				// std::map
@@ -32,3 +30,17 @@
 # include <arpa/inet.h>		// inet_ntoa(), inet_pton(), inet_ntop()
 # include <ifaddrs.h>		// getifaddrs()
 # include <poll.h>			// poll(), pollfd
+
+
+struct IRCMessage
+{
+	std::string					prefix;
+	std::string					command;
+	std::vector<std::string>	params;
+};
+
+IRCMessage	*IRCparsing(std::string message);
+
+# include "Server.hpp"
+# include "Client.hpp"
+# include "Channel.hpp"
