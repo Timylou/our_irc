@@ -6,11 +6,19 @@
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/15 19:33:13 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/15 19:57:55 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
+
+/******************** SIGNAL HANDLER ********************/
+
+volatile sig_atomic_t g_running = 1;
+
+void handleSignal(int signal){
+	g_running = 0;
+}
 
 /******************** CONSTRUCTORS ********************/
 
@@ -49,6 +57,7 @@ Server::Server(void)	:	_port(6667), _password("miaou")
 	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_listenSocket < 0)
 		throw (std::runtime_error("Error : Cannot open listen socket"));
+	std::signal(SIGINT, handleSignal);
 	serverInit(this);
 }
 
@@ -58,14 +67,23 @@ Server::Server(unsigned short port, std::string password)	:	_port(port), _passwo
 	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_listenSocket < 0)
 		throw (std::runtime_error("Error : Cannot open listen socket"));
+	std::signal(SIGINT, handleSignal);
 	serverInit(this);
 }
 
 /********************* DESTRUCTOR ********************/
 
-Server::~Server(void)
-{
-
+Server::~Server(void) {
+	std::string shutdownMsg = "\nServer shutting down\r\n"; // \r\n norm IRC
+	for (size_t i = 1; i < _pfd.size(); ++i){
+		send(_pfd[i].fd, shutdownMsg.c_str(), shutdownMsg.size(), 0); // sender to client
+		removeClient(_clients.find(_pfd[i].fd)->second, i);
+		i--;
+	}
+	removeClient(_clients.find(_pfd[0].fd)->second, 0);
+	for (std::map<std::string, Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+		delete it->second;
+	std::cout << std::endl << "Signal received, shutting down the server..." << std::endl;
 }
 
 /************************* RUN ***********************/
@@ -75,11 +93,15 @@ void	Server::run(void)
 	int		clientSocket;
 	Client	*client;
 
-	while (true)
+	while (g_running)
 	{
 		if (poll(this->_pfd.data(), this->_pfd.size(), -1) < 0)
+		{
+			if (errno == EINTR)
+				continue;
 			throw std::runtime_error("poll error");
-
+		}
+		
 		for (size_t i = 0; i < this->_pfd.size(); ++i)
 		{
 			if (!(this->_pfd[i].revents & POLLIN)) // If the client has nothing to say skip it
@@ -261,7 +283,7 @@ void	Server::join(Client *client, IRCMessage *message)
 		this->_channels[channelName]->addClient(client);
 	}
 		// 🔹 message JOIN (format IRC)
-	std::string msgJoin = ":" + client->getNickname() + " JOIN " + channelName;
+	std::string msgJoin = ":" + client->getNickname() + " JOIN " + channelName + "\r\n";
 	this->_channels[channelName]->Broadcast(client, msgJoin);
 }
 
