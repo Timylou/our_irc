@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:47:35 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/13 13:36:53 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/16 17:02:28 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ class Client
 		std::string	_username = "";	// client's username
 		std::string	_nickname = "";	// hexchat specific
 		std::string	_realname = "";	// hexchat specific
+		std::string	_password = "";		// password
 		bool		_status = false;// online status : true for online, false for offline
 		std::string	_buffer = "";	// message entry buffer
 
@@ -30,6 +31,7 @@ class Client
 		Client(int socket) { this->_socket = socket; }
 
 		void		setStatus(bool newStatus)		{ this->_status = newStatus; }
+		bool		getStatus(void)					{ return (this->_status); }
 
 		std::string	&getBuffer()					{ return (this->_buffer); }
 		void		setBuffer(std::string buffer)	{ this->_buffer = buffer; }
@@ -39,10 +41,12 @@ class Client
 		std::string	getUsername()					{ return (this->_username); }
 		std::string	getNickname()					{ return (this->_nickname); }
 		std::string	getRealname()					{ return (this->_realname); }
+		std::string	getPassword()					{ return (this->_password); }
 
 		void		setUsername(std::string newUsername)	{ this->_username = newUsername; }
 		void		setNickname(std::string newNickname)	{ this->_nickname = newNickname; }
-		// void		setRealname(std::string newRealname)	{ this->_realname = newRealname; } maybe ?
+		void		setRealname(std::string newRealname)	{ this->_realname = newRealname; }
+		void		setPassword(std::string newPassword)	{ this->_password = newPassword; }
 
 		~Client(void);
 };

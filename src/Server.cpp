@@ -6,7 +6,7 @@
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/15 19:57:55 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/17 15:49:35 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,7 +153,7 @@ int	Server::readMessage(Client *client) { // int 3 cas : 0 == send rien 1 == sen
 			}
 			return (-1);
 		}
-		if (bytes > 2 && buffer[bytes - 2] != '\r')
+		if (bytes > 2 && buffer[bytes - 2] != '\r' && buffer[bytes - 1] == '\n')
 			buffer[bytes - 1] = 0;
 		else
 			buffer[bytes] = 0;
@@ -237,7 +237,17 @@ void	Server::doCmd(Client *client)
 
 	try
 	{
-		if (message->command == "JOIN")
+		if (message->command == "CAP")
+			send(client->getSocket(), ":server CAP * LS :\r\n", 22, MSG_DONTWAIT);
+		else if (message->command == "NICK")
+			this->nick(client, message);
+		else if (message->command == "USER")
+			this->user(client, message);
+		else if (message->command == "PASS")
+			this->pass(client, message);
+		else if (!client->getStatus())
+			throw (std::runtime_error(":server 451 * :You have not registered\r\n"));
+		else if (message->command == "JOIN")
 			this->join(client, message);
 		else if (message->command == "PRIVMSG")
 			this->privmsg(client, message);
@@ -281,10 +291,17 @@ void	Server::join(Client *client, IRCMessage *message)
 	{
 		this->addChannel(channelName);
 		this->_channels[channelName]->addClient(client);
+		this->_channels[channelName]->promoteClient(client);
 	}
-		// 🔹 message JOIN (format IRC)
+	// 🔹 message JOIN (format IRC)
 	std::string msgJoin = ":" + client->getNickname() + " JOIN " + channelName + "\r\n";
 	this->_channels[channelName]->Broadcast(client, msgJoin);
+	msgJoin = ":server 331 " + client->getNickname() + " " + channelName + " :No topic is set\r\n";
+	if (!this->_channels[channelName]->getTopic().empty())
+		msgJoin = ":server 332 " + client->getNickname() + " " + channelName + " :topic\r\n";
+	msgJoin += ":server 353 " + client->getNickname() + " = " + channelName + " :" + _channels[channelName]->getStringClient() + "\r\n";
+	msgJoin += ":server 366 " + client->getNickname() + " " + channelName + " :End of /NAMES list\r\n";
+	send(client->getSocket(), msgJoin.c_str(), msgJoin.length(), MSG_DONTWAIT);
 }
 
 void	Server::privmsg(Client *client, IRCMessage *message)
@@ -295,15 +312,64 @@ void	Server::privmsg(Client *client, IRCMessage *message)
 	if (chan_user[0] == '#'){
 		// gere channel
 		if (!findChannel(chan_user))
-			throw (std::runtime_error("Privmsg : need an existant channel\n"));
+			throw (std::runtime_error("Privmsg : need an existant channel\r\n"));
 		Channel	*channel = _channels[chan_user];
 		if (!channel->findClient(client))
-			throw (std::runtime_error("Privmsg : Client is not in channel\n"));
+			throw (std::runtime_error("Privmsg : Client is not in channel\r\n"));
 		std::string msg = ":" + client->getNickname() + " " + message->params[1];
 		channel->Broadcast(client, msg);
 		std::cout << msg << std::endl;
 	}
-	// else{
-		// gere user
-	// }
+	else{
+		for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+			if (it->second->getNickname() == chan_user)
+			{
+				std::string msg = ":" + client->getNickname() + " " + message->params[1];
+				send(it->second->getSocket(), msg.c_str(), msg.length(), MSG_DONTWAIT);
+				return;
+			}
+		throw (std::runtime_error(":Privmsg : Client doesnt exist\r\n"));
+	}
+}
+
+void	Server::nick(Client *client, IRCMessage *message)
+{
+	if (!message || message->params.empty() || message->params[0].empty())
+		throw (std::runtime_error(":server 431 * :No nickname given\r\n"));
+	std::string	nickname = message->params[0];
+	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+		if (it->second->getNickname() == nickname)
+			throw (std::runtime_error(":server 433 * " + nickname + " :Nickname is already in use\r\n"));
+	if (!client->getNickname().empty())
+		this->broadcast(client, ":" + client->getNickname() + " NICK " + nickname + "\r\n");
+	client->setNickname(nickname);
+}
+
+void	Server::user(Client *client, IRCMessage *msg)
+{
+	if (msg->params.size() < 4)
+		throw (std::runtime_error(":server 461 USER :Not enough parameters\r\n"));
+	if (!client->getUsername().empty())
+		throw (std::runtime_error(":server 462 :You may not reregister\r\n"));
+	client->setUsername(msg->params[0]);
+	client->setRealname(msg->params[3]);
+
+	if (!client->getNickname().empty() && !client->getRealname().empty() && client->getPassword() == this->_password)
+	{
+		std::string	msgWelcome = ":server 001 " + client->getNickname() + ":Welcome to the IRC network\r\n";
+		msgWelcome += ":server 002 " + client->getNickname() + ":Your host is ircserv\r\n";
+		msgWelcome += ":server 003 " + client->getNickname() + " :This server was created today\r\n";
+		msgWelcome += ":server 004 " + client->getNickname() + " ircserv 1.0 o o\r\n";
+		send(client->getSocket(), msgWelcome.c_str(), msgWelcome.length(), MSG_DONTWAIT);
+		client->setStatus(true);
+	}
+}
+
+void	Server::pass(Client *client, IRCMessage *msg)
+{
+	if (msg->params.empty())
+		throw (std::runtime_error(":server 461 PASS :Not enough parameters\r\n"));
+	if (msg->params[0] != this->_password)
+		throw(std::runtime_error("464 Password incorrect\r\n"));
+	client->setPassword(msg->params[0]);
 }

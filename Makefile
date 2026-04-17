@@ -1,7 +1,7 @@
 NAME	:=	ircserver
 
 CXX		:=	c++
-CXFLAGS	:=	-Wall -Wextra -Werror -g --std=c++98
+CXFLAGS	:=	-Wall -Wextra -Werror --std=c++98 -g
 
 DIR_SRC	:=	src
 DIR_OBJ	:=	obj

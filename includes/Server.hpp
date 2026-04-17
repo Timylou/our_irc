@@ -6,7 +6,7 @@
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:39:16 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/15 18:08:51 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/16 16:45:36 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,4 +54,7 @@ class Server
 		void	doCmd(Client *client);
 		void	join(Client *client, IRCMessage *message);
 		void	privmsg(Client *client, IRCMessage *message);
+		void	nick(Client *client, IRCMessage *message);
+		void	user(Client *client, IRCMessage *message);
+		void	pass(Client *client, IRCMessage *message);
 };

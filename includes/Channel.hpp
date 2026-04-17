@@ -6,7 +6,7 @@
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 16:00:40 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/15 18:54:05 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/16 15:15:09 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,10 +40,15 @@ class Channel
 
 		bool						findClient(Client *client) { return (_clients.find(client) != _clients.end()); }
 		std::map<Client *, bool>	getClients(void) { return this->_clients; }
+		std::string					getStringClient(void);
 		void						addClient(Client *client) {_clients[client] = false;}
 		void						removeClient(Client *client) {_clients.erase(client);}
+		void						promoteClient(Client *client) {if (findClient(client)) _clients[client] = true;}
+		void						demoteClient(Client *client) {if (findClient(client)) _clients[client] = false;}
 
 		std::string					getPassword(void) {return (_password);}
 		bool						getMode(t_mode mode) { return (_modes[mode]); }
+
+		std::string					getTopic(void) {return _topic;}
 		void						Broadcast(Client *client, const std::string &message);
 };
