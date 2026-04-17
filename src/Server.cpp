@@ -6,7 +6,7 @@
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/17 15:49:35 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/17 15:58:11 by yel-mens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -356,8 +356,8 @@ void	Server::user(Client *client, IRCMessage *msg)
 
 	if (!client->getNickname().empty() && !client->getRealname().empty() && client->getPassword() == this->_password)
 	{
-		std::string	msgWelcome = ":server 001 " + client->getNickname() + ":Welcome to the IRC network\r\n";
-		msgWelcome += ":server 002 " + client->getNickname() + ":Your host is ircserv\r\n";
+		std::string	msgWelcome = ":server 001 " + client->getNickname() + " :Welcome to the IRC network\r\n";
+		msgWelcome += ":server 002 " + client->getNickname() + " :Your host is ircserv\r\n";
 		msgWelcome += ":server 003 " + client->getNickname() + " :This server was created today\r\n";
 		msgWelcome += ":server 004 " + client->getNickname() + " ircserv 1.0 o o\r\n";
 		send(client->getSocket(), msgWelcome.c_str(), msgWelcome.length(), MSG_DONTWAIT);
