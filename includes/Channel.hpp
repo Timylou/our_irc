@@ -6,7 +6,7 @@
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 16:00:40 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/16 15:15:09 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/19 06:25:25 by amairia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ class Channel
 
 		std::string					getPassword(void) {return (_password);}
 		bool						getMode(t_mode mode) { return (_modes[mode]); }
+		const std::string&				getName(void) {return (_name); }
 
 		std::string					getTopic(void) {return _topic;}
 		void						Broadcast(Client *client, const std::string &message);

@@ -6,7 +6,7 @@
 /*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/17 15:58:11 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/19 06:26:28 by amairia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -316,7 +316,7 @@ void	Server::privmsg(Client *client, IRCMessage *message)
 		Channel	*channel = _channels[chan_user];
 		if (!channel->findClient(client))
 			throw (std::runtime_error("Privmsg : Client is not in channel\r\n"));
-		std::string msg = ":" + client->getNickname() + " " + message->params[1];
+		std::string msg = channel->getName() + " :" + client->getNickname() + " " + message->params[1];
 		channel->Broadcast(client, msg);
 		std::cout << msg << std::endl;
 	}
