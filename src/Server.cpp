@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
+/*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:43:21 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/19 06:26:28 by amairia          ###   ########.fr       */
+/*   Updated: 2026/04/22 12:52:21 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,18 +51,29 @@ void	serverInit(Server *serv)
 	serv->addClient(serv->getSocket());	// clients[0] == listenSocket
 }
 
-Server::Server(void)	:	_port(6667), _password("miaou")
+Server::Server(std::string port, std::string password)
 {
-	// Open listen socket
-	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (this->_listenSocket < 0)
-		throw (std::runtime_error("Error : Cannot open listen socket"));
-	std::signal(SIGINT, handleSignal);
-	serverInit(this);
-}
+	// set port
+	if (port.empty())
+		throw std::runtime_error("Empty port string");
+	for (size_t i = 0; i < port.size(); i++)
+	{
+		if (!std::isdigit(port[i]))
+			throw std::runtime_error("Port can only be digits");
+	}
+	int	port_n;
+	std::istringstream(port) >> port_n;
+	if (port_n <= 0 || port_n > 65535)
+		throw std::runtime_error("Invalid port range");
+	this->_port = port_n;
 
-Server::Server(unsigned short port, std::string password)	:	_port(port), _password(password)
-{
+	// set password
+	if (password.empty())
+		throw std::runtime_error("Empty password string");
+	if (password.size() < 5 || password.size() > 20)
+		throw std::runtime_error("Password lenght must be contained between 5 and 20 characters.");
+	this->_password = password;
+
 	// Open listen socket
 	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_listenSocket < 0)
@@ -101,7 +112,7 @@ void	Server::run(void)
 				continue;
 			throw std::runtime_error("poll error");
 		}
-		
+
 		for (size_t i = 0; i < this->_pfd.size(); ++i)
 		{
 			if (!(this->_pfd[i].revents & POLLIN)) // If the client has nothing to say skip it
@@ -116,18 +127,22 @@ void	Server::run(void)
 					this->addClient(clientSocket);
 				continue;
 			}
-			int	check = readMessage(client);
-			if (check == 1)// read client message
-			{
-				std::cout << client->getUsername() << i << " : " << client->getBuffer();
-				doCmd(client);
-				//broadcast(client, client->getBuffer());
-				client->setBuffer("\0");
-			}
-			else if (check == -1)
+			int check = readMessage(client);
+			if (check == -1)
 			{
 				removeClient(client, i);
 				i--;
+				continue;
+			}
+			if (check == 1) // read client message
+			{
+				std::string message;
+
+				while (joinMessage(client->getBuffer(), message))
+				{
+					std::cout << client->getUsername() << i << " : " << message << std::endl;
+					doCmd(client, message);
+				}
 			}
 		}
 	}
@@ -138,27 +153,26 @@ void	Server::run(void)
 int	Server::readMessage(Client *client) { // int 3 cas : 0 == send rien 1 == send message -1 == supp client
 
 	int		bytes;
-	char	buffer[BUFFER_SIZE + 1];
+	char	buffer[BUFFER_SIZE];
 
-	do {
+	while (true) {
 		bytes = recv(client->getSocket(), buffer, BUFFER_SIZE, MSG_DONTWAIT);
 		if (bytes == 0)
 			return (-1);
 		else if (bytes == -1)
 		{
 			if (errno == EAGAIN || errno == EWOULDBLOCK)
-			{
-				errno = 0;
-				return (0);
-			}
+				break;
 			return (-1);
 		}
-		if (bytes > 2 && buffer[bytes - 2] != '\r' && buffer[bytes - 1] == '\n')
-			buffer[bytes - 1] = 0;
-		else
-			buffer[bytes] = 0;
-		client->getBuffer().append(buffer);
-	} while (bytes >= 0 && buffer[bytes - 2] != '\r' && buffer[bytes - 1] != '\n');
+		// if (bytes > 2 && buffer[bytes - 2] != '\r' && buffer[bytes - 1] == '\n')
+		// 	buffer[bytes - 2] = 0;
+		// else
+		// 	buffer[bytes] = 0;
+		std::cout << "{{" << client->getBuffer() << "}}" << std::endl;
+		client->getBuffer().append(buffer, bytes);
+	}
+	// while (bytes >= 0 && buffer[bytes - 2] != '\r' && buffer[bytes - 1] != '\n');
 	if (client->getBuffer().find("\r\n") != std::string::npos)
 		return 1;
 	return 0;
@@ -205,8 +219,15 @@ void	Server::removeClient(Client *client, int numClient)
 void	Server::broadcast(Client *client, std::string message)
 {
 	std::vector<Client *>	clientList = getListenningClients(client);
+	std::string msg = message;
+	if (msg.size() < 2 || msg.substr(msg.size() - 2) != "\r\n")
+		msg += "\r\n";
+	std::cout << "[[" << msg << "]]" << std::endl;
 	for (std::vector<Client *>::iterator it = clientList.begin(); it != clientList.end(); ++it)
-		send((*it)->getSocket(), message.c_str(), message.length(), MSG_DONTWAIT);
+	{
+		if (send((*it)->getSocket(), msg.c_str(), msg.length(), MSG_DONTWAIT) < 0)
+			std::cerr << "send failed to client fd " << (*it)->getSocket() << std::endl;
+	}
 }
 
 std::vector<Client *>	Server::getListenningClients(Client *client)
@@ -231,14 +252,17 @@ std::vector<Client *>	Server::getListenningClients(Client *client)
 
 /********************* COMMANDS **********************/
 
-void	Server::doCmd(Client *client)
+void	Server::doCmd(Client *client, std::string line)
 {
-	IRCMessage	*message = IRCparsing(client->getBuffer());
+	IRCMessage	*message = IRCparsing(line);
 
 	try
 	{
-		if (message->command == "CAP")
-			send(client->getSocket(), ":server CAP * LS :\r\n", 22, MSG_DONTWAIT);
+		if (message->command == "CAP" && !client->getCap())
+		{
+			client->setCap(true);
+			send(client->getSocket(), CAP_ANS, sizeof(CAP_ANS) - 1, MSG_DONTWAIT);
+		}
 		else if (message->command == "NICK")
 			this->nick(client, message);
 		else if (message->command == "USER")
@@ -246,13 +270,13 @@ void	Server::doCmd(Client *client)
 		else if (message->command == "PASS")
 			this->pass(client, message);
 		else if (!client->getStatus())
-			throw (std::runtime_error(":server 451 * :You have not registered\r\n"));
+			throw (std::runtime_error(UNREG));
 		else if (message->command == "JOIN")
 			this->join(client, message);
 		else if (message->command == "PRIVMSG")
 			this->privmsg(client, message);
 		else
-			throw std::runtime_error("command not found\r\n");
+			throw std::runtime_error(NOT_FOUND);
 	}
 	catch (std::exception &e)
 	{
@@ -306,6 +330,7 @@ void	Server::join(Client *client, IRCMessage *message)
 
 void	Server::privmsg(Client *client, IRCMessage *message)
 {
+	std::cout << "!!!!!!!!!!privmsg!!!!!!!!!!" << std::endl;
 	if (!message || message->params.empty() || message->params[0].empty())
 		throw (std::runtime_error("Privmsg command needs parameter\n"));
 	std::string chan_user = message->params[0];
@@ -316,7 +341,9 @@ void	Server::privmsg(Client *client, IRCMessage *message)
 		Channel	*channel = _channels[chan_user];
 		if (!channel->findClient(client))
 			throw (std::runtime_error("Privmsg : Client is not in channel\r\n"));
-		std::string msg = channel->getName() + " :" + client->getNickname() + " " + message->params[1];
+		// std::string msg = channel->getName() + " :" + client->getNickname() + " " + message->params[1];
+		std::string msg = ":" + client->getNickname() + "!" + client->getUsername() + "@" + HOST + " PRIVMSG " + channel->getName() + " :" + message->params[1] + "\r\n";
+		// std::cout << "privmsg: " << msg << std::endl;
 		channel->Broadcast(client, msg);
 		std::cout << msg << std::endl;
 	}
@@ -324,7 +351,8 @@ void	Server::privmsg(Client *client, IRCMessage *message)
 		for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 			if (it->second->getNickname() == chan_user)
 			{
-				std::string msg = ":" + client->getNickname() + " " + message->params[1];
+				std::string msg = ":" + client->getNickname() + "!" + client->getUsername() + "@" + HOST + " PRIVMSG " + chan_user + " :" + message->params[1] + "\r\n";
+				std::cout << "privmsg: " << msg << std::endl;
 				send(it->second->getSocket(), msg.c_str(), msg.length(), MSG_DONTWAIT);
 				return;
 			}

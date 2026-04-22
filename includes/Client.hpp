@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
+/*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:47:35 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/16 17:02:28 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/22 12:08:46 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ class Client
 		std::string	_password = "";		// password
 		bool		_status = false;// online status : true for online, false for offline
 		std::string	_buffer = "";	// message entry buffer
+		bool		_cap = false;	// flag for cap status
 
 		Client(void);			// We can't use the void constructor
 
@@ -32,6 +33,9 @@ class Client
 
 		void		setStatus(bool newStatus)		{ this->_status = newStatus; }
 		bool		getStatus(void)					{ return (this->_status); }
+
+		void		setCap(bool newCap)			{ this->_cap = newCap; }
+		bool		getCap(void)					{ return (this->_cap); }
 
 		std::string	&getBuffer()					{ return (this->_buffer); }
 		void		setBuffer(std::string buffer)	{ this->_buffer = buffer; }

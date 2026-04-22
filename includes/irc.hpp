@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   irc.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yel-mens <yel-mens@student.42.fr>          +#+  +:+       +#+        */
+/*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 11:06:30 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/15 19:17:44 by yel-mens         ###   ########.fr       */
+/*   Updated: 2026/04/22 12:29:21 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,10 @@
 # include <ifaddrs.h>		// getifaddrs()
 # include <poll.h>			// poll(), pollfd
 
+# define CAP_ANS ":server CAP * LS :\r\n"
+# define UNREG ":server 451 * :You have not registered\r\n"
+# define NOT_FOUND "command not found\r\n"
+# define HOST "127.0.0.1"
 
 struct IRCMessage
 {
@@ -39,6 +43,7 @@ struct IRCMessage
 	std::vector<std::string>	params;
 };
 
+bool	joinMessage(std::string &buffer, std::string &message);
 IRCMessage	*IRCparsing(std::string message);
 
 # include "Server.hpp"
