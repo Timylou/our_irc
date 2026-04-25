@@ -6,11 +6,12 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 16:06:22 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/22 12:57:05 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/25 19:22:43 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Channel.hpp"
+#include "Client.hpp"
 
 /******************** CONSTRUCTOR ********************/
 
@@ -20,10 +21,15 @@ Channel::Channel(const std::string &name)	:	_name(name) {}
 
 Channel::~Channel(void) {}
 
-void	Channel::Broadcast(Client *client, const std::string &message)
+void	Channel::broadcast(const std::string &message)
 {
 	for (std::map<Client *, bool>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		std::cout << "SEND to ptr=" << it->first
+          << " nick=" << it->first->getNickname()
+          << " fd=" << it->first->getSocket() << std::endl;
 		send(it->first->getSocket(), message.c_str(), message.length(), MSG_DONTWAIT);
+	}
 }
 
 std::string	Channel::getStringClient(void)

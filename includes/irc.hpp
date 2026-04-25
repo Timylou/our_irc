@@ -6,11 +6,15 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 11:06:30 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/22 12:29:21 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/25 18:34:33 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
+class Server;
+class Client;
+class Channel;
 
 # include <sstream>			// std::istringstream
 # include <string>			// std::string
@@ -46,6 +50,8 @@ struct IRCMessage
 bool	joinMessage(std::string &buffer, std::string &message);
 IRCMessage	*IRCparsing(std::string message);
 
-# include "Server.hpp"
-# include "Client.hpp"
-# include "Channel.hpp"
+void	handlePRIVMSG(Server &server, Client *client, IRCMessage *message);
+void	handleJOIN(Server &server, Client *client, IRCMessage *message);
+void	handleNICK(Server &server, Client *client, IRCMessage *message);
+void	handleUSER(Server &server, Client *client, IRCMessage *message);
+void	handlePASS(Server &server, Client *client, IRCMessage *message);

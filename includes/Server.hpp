@@ -6,7 +6,7 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:39:16 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/22 13:03:31 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/25 18:36:59 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,24 +36,28 @@ class Server
 
 		void	run(void);
 
-		int				getSocket(void) const;
-		unsigned short	getPort(void) const;
-		std::string		getPassword(void) const;
+		int				getSocket(void) const {return (this->_listenSocket);}
+		unsigned short	getPort(void) const {return (this->_port);}
+		std::string		getPassword(void) const {return (this->_password);}
 
 		void	addClient(int socket);
 		void	removeClient(Client *client, int numClient);
 
+		Client	*getClient(std::string nickname);
+		std::map<int, Client *> &getClients(void) { return this->_clients; }
+
 		int		readMessage(Client *client);
-		void	broadcast(Client *client, std::string message);
-		std::vector<Client *>	getListenningClients(Client *client);
 
 		bool	findChannel(const std::string &channelName);
 		void	addChannel(const std::string &channelName);
 
+		Channel*	&getChannel(std::string user){
+			std::map<std::string, Channel *>::iterator it = _channels.find(user);
+			if (it == _channels.end())
+				throw std::runtime_error("Channel not found");
+			return it->second;
+		}
+		std::map<std::string, Channel *>	&getChannels(void) { return this->_channels; }
+
 		void	doCmd(Client *client, std::string line);
-		void	join(Client *client, IRCMessage *message);
-		void	privmsg(Client *client, IRCMessage *message);
-		void	nick(Client *client, IRCMessage *message);
-		void	user(Client *client, IRCMessage *message);
-		void	pass(Client *client, IRCMessage *message);
 };

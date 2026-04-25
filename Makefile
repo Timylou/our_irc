@@ -7,7 +7,16 @@ DIR_SRC	:=	src
 DIR_OBJ	:=	obj
 INCLUDE	:=	-Iincludes
 
-SRC		:=	main.cpp Server.cpp Client.cpp Channel.cpp Parsing.cpp
+SRC		:=	main.cpp \
+			Server.cpp \
+			Client.cpp \
+			Channel.cpp \
+			Parsing.cpp \
+			commands/JOIN.cpp \
+			commands/NICK.cpp \
+			commands/PASS.cpp \
+			commands/PRIVMSG.cpp \
+			commands/USER.cpp
 OBJ		:=	$(SRC:.cpp=.o)
 OBJ		:=	$(addprefix $(DIR_OBJ)/, $(OBJ))
 

@@ -1,31 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   PASS.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/04/01 15:13:10 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/25 18:34:20 by julifern         ###   ########.fr       */
+/*   Created: 2026/04/25 14:17:52 by julifern          #+#    #+#             */
+/*   Updated: 2026/04/25 17:27:03 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "irc.hpp"
 #include "Server.hpp"
+#include "Channel.hpp"
+#include "Client.hpp"
 
-
-int	main(int argc, char **argv)
+void	handlePASS(Server &server, Client *client, IRCMessage *msg)
 {
-	try {
-		if (argc != 3)
-			throw std::runtime_error("Usage : ./ircsrv <port> <password>");
-		Server	server(argv[1], argv[2]);
-		server.run();
-	}
-	catch (const std::exception &e)
-	{
-		std::cerr << e.what() << std::endl;
-		return 1;
-	}
-	return 0;
+	if (msg->params.empty())
+		throw (std::runtime_error(":server 461 PASS :Not enough parameters\r\n"));
+	if (msg->params[0] != server.getPassword())
+		throw(std::runtime_error("464 Password incorrect\r\n"));
+	client->setPassword(msg->params[0]);
 }

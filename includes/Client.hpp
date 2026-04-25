@@ -6,7 +6,7 @@
 /*   By: julifern <julifern@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/01 15:47:35 by yel-mens          #+#    #+#             */
-/*   Updated: 2026/04/22 12:08:46 by julifern         ###   ########.fr       */
+/*   Updated: 2026/04/25 18:55:07 by julifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,9 @@ class Client
 		void		setNickname(std::string newNickname)	{ this->_nickname = newNickname; }
 		void		setRealname(std::string newRealname)	{ this->_realname = newRealname; }
 		void		setPassword(std::string newPassword)	{ this->_password = newPassword; }
-
+		
 		~Client(void);
 };
+
+void	sendToClient(Client *client, std::string msg);
 
